@@ -1,0 +1,32 @@
+<IfModule mod_rewrite.c>
+ <IfModule mod_negotiation.c>
+     Options -MultiViews -Indexes
+ </IfModule>
+
+ RewriteEngine On
+
+ # Handle Authorization Header
+ RewriteCond %{HTTP:Authorization} .
+ RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+ # Redirect Trailing Slashes If Not A Folder...
+ RewriteCond %{REQUEST_FILENAME} !-d
+ RewriteCond %{REQUEST_URI} (.+)/$
+ RewriteRule ^ %1 [L,R=301]
+
+
+
+ #RewriteCond %{REQUEST_URI} !(\.css|\.js|\.png|\.woff|\.woff2|\.jpg|\.gif|robots\.txt)$ [NC]
+ RewriteCond %{REQUEST_URI} !(\.svg|\.woff|\.woff2|\.ttf|\.css|\.js|\.png|\.jpg|\.gif|\.pdf|\.jpeg|\.docx|robots\.txt)$ [NC]
+ RewriteCond %{REQUEST_FILENAME} !-d
+ RewriteCond %{REQUEST_FILENAME} !-f
+ RewriteRule ^ index.php [L]
+ RewriteCond %{REQUEST_FILENAME} !-d
+ RewriteCond %{REQUEST_FILENAME} !-f
+ RewriteCond %{REQUEST_URI} !^/public/
+ RewriteRule ^(css|js|images|admin|userimage|ckedit_images|video|thumbnail|fonts|amenities-pic|img|propert|property_video|vendor|photos|files|doc|flags|1x1|4x3)/(.*)$ public/$1/$2 [L,NC]
+
+ # Handle Front Controller...
+ RewriteCond %{REQUEST_FILENAME} !-d
+ RewriteCond %{REQUEST_FILENAME} !-f
+ RewriteRule ^ index.php [L]
