@@ -21,7 +21,7 @@ use App\Models\Message;
 use App\Models\Cuti;
 
 use App\Models\KategoriItem;
-use App\Models\KaryawanAbsen;
+use App\Models\AturanPotongan;
 
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Str;
@@ -107,15 +107,7 @@ class PenggajianController extends Controller
   {
     // code...
     $date = date('Y-m-d');
-    // $kary = Karyawan::first();
-    // $per =  Gaji::where('karyawan_id',$kary->id)->orderBy('id','desc')->skip(1)->take(2)->first();
-
-    //  $selectPeriode  = Gaji::where('periode_gaji_id', $per->periode_gaji_id)->first();
-
-    //$selectPeriode = Gaji::orderBy('id','desc')->first();
-
-    //$periodeGaji=PeriodeGaji::where('id',$selectPeriode->periode_gaji_id)->first();
-
+    
     $periodeGaji = PeriodeGaji::orderBy('id', 'desc')->first();
 
 
@@ -130,7 +122,7 @@ class PenggajianController extends Controller
 
     $lastGaji = Gaji::orderBy('id', 'desc')->first();
 
-    //$periodeLastGaji = PeriodeGaji::where('id',$lastGaji->periode_gaji_id)->first();
+    
 
     $periodeLastGaji = PeriodeGaji::orderBy('id', 'desc')->first();
 
@@ -141,8 +133,8 @@ class PenggajianController extends Controller
       foreach ($chunk as $key) {
         $this->insertTransGaji($request, $periodeLastGaji->mulai, $periodeLastGaji->selesai, $periodeGaji->id, $key->id, $key->jabatan_id, $log);
         //departemen_item_gaji
-        $makan = DB::table('departemen_item_gaji')->where('departemen_id', $key->departement_id)->where('item_gaji_id', 1)->first();
-        $lembur = DB::table('departemen_item_gaji')->where('departemen_id', $key->departement_id)->where('item_gaji_id', 2)->first();
+        $makan = DB::table('departemen_item_gaji')->where('departemen_id', $key->departement_id)->where('item_gaji_id', 2)->first();
+        $lembur = DB::table('departemen_item_gaji')->where('departemen_id', $key->departement_id)->where('item_gaji_id', 3)->first();
 
 
         $uang_makan = $makan->nominal;
@@ -171,130 +163,135 @@ class PenggajianController extends Controller
             $gapok = TransGaji::where('gaji_id', $cek->id)->where('item_gaji_id', 1)->sum('nominal');
             $periode = $periodeGaji->where('id', $cek->periode_gaji_id)->first();
             // ijin / sakit
-            if (TransGaji::where('item_gaji_id', 6)->where('gaji_id', $cek->id)->first() != null || TransGaji::where('item_gaji_id', 6)->where('gaji_id', $cek->id)->first() != "") {
 
-              $absensi1 = count(Absensi::whereBetween('tanggal', [$periode->mulai, $periode->selesai])->where('karyawan_id', $cek->karyawan_id)->where('status_absensi', 'I')->get());
-              $izin = 1 / 30 * $gapok;
-              TransGaji::where('item_gaji_id', 6)->where('gaji_id', $cek->id)->update(['nominal' => $izin, 'qty' => $absensi1]);
+            $absensi1 = count(Absensi::whereBetween('tanggal', [$periode->mulai, $periode->selesai])->where('karyawan_id', $cek->karyawan_id)->where('status_absensi', 'I')->get());
 
-              $dataIjin = [
-                'gaji_id' => $cek->id,
-                'nominal' => $izin,
-                'qty' => $absensi1,
-              ];
+              $hasilIzin = $this->hitungPotonganBerdasarkanQty(
+                jenisPotongan: 'izin',
+                konfigId: 1,
+                qty: $absensi1,
+                uangMakan: $uang_makan,
+                gajiPokok: $gapok,
+                totalGaji: ''
+            );
+            // if (TransGaji::where('item_gaji_id', 6)->where('gaji_id', $cek->id)->first() != null || TransGaji::where('item_gaji_id', 6)->where('gaji_id', $cek->id)->first() != "") {
 
-              $logs = [
-                'tanggal' => now(),
-                'tabel' => 'TransGaji',
-                'aksi' => 'Update',
-                'user' => auth()->guard('karyawan')->user()->hak_akses . '-' . auth()->guard('karyawan')->user()->id,
-                'ip' => $request->ip(),
-                'keterangan' => json_encode(['data' => $dataIjin]),
-                'serial' => url('fetchGaji'),
-              ];
+            //   $absensi1 = count(Absensi::whereBetween('tanggal', [$periode->mulai, $periode->selesai])->where('karyawan_id', $cek->karyawan_id)->where('status_absensi', 'I')->get());
+            //   $izin = 1 / 30 * $gapok;
+            //   TransGaji::where('item_gaji_id', 6)->where('gaji_id', $cek->id)->update(['nominal' => $izin, 'qty' => $absensi1]);
+
+            //   $dataIjin = [
+            //     'gaji_id' => $cek->id,
+            //     'nominal' => $izin,
+            //     'qty' => $absensi1,
+            //   ];
+
+            //   $logs = [
+            //     'tanggal' => now(),
+            //     'tabel' => 'TransGaji',
+            //     'aksi' => 'Update',
+            //     'user' => auth()->guard('karyawan')->user()->hak_akses . '-' . auth()->guard('karyawan')->user()->id,
+            //     'ip' => $request->ip(),
+            //     'keterangan' => json_encode(['data' => $dataIjin]),
+            //     'serial' => url('fetchGaji'),
+            //   ];
 
 
-              $log->create($logs);
-            } // end of if
-
+            //   $log->create($logs);
+            // } // end of if
 
             // alpha
-            if (TransGaji::where('item_gaji_id', 7)->where('gaji_id', $cek->id)->first() != null || TransGaji::where('item_gaji_id', 7)->where('gaji_id', $cek->id)->first() != "") {
+            // if (TransGaji::where('item_gaji_id', 7)->where('gaji_id', $cek->id)->first() != null || TransGaji::where('item_gaji_id', 7)->where('gaji_id', $cek->id)->first() != "") {
 
-              $absensi2 = count(Absensi::whereBetween('tanggal', [$periode->mulai, $periode->selesai])->where('karyawan_id', $cek->karyawan_id)->where('status_absensi', 'A')->get());
-              $alfa = 1 / 25 * $gapok;
-              TransGaji::where('item_gaji_id', 7)->where('gaji_id', $cek->id)->update(['nominal' => $alfa, 'qty' => $absensi2]);
+            //   $absensi2 = count(Absensi::whereBetween('tanggal', [$periode->mulai, $periode->selesai])->where('karyawan_id', $cek->karyawan_id)->where('status_absensi', 'A')->get());
+            //   $alfa = 1 / 25 * $gapok;
+            //   TransGaji::where('item_gaji_id', 7)->where('gaji_id', $cek->id)->update(['nominal' => $alfa, 'qty' => $absensi2]);
 
-              $dataAlpha = [
-                'gaji_id' => $cek->id,
-                'nominal' => $alfa,
-                'qty' => $absensi2,
-              ];
+            //   $dataAlpha = [
+            //     'gaji_id' => $cek->id,
+            //     'nominal' => $alfa,
+            //     'qty' => $absensi2,
+            //   ];
 
-              $logs2 = [
-                'tanggal' => now(),
-                'tabel' => 'TransGaji',
-                'aksi' => 'Update',
-                'user' => auth()->guard('karyawan')->user()->hak_akses . '-' . auth()->guard('karyawan')->user()->id,
-                'ip' => $request->ip(),
-                'keterangan' => json_encode(['data' => $dataAlpha]),
-                'serial' => url('fetchGaji'),
-              ];
-
-
-              $log->create($logs2);
-            }
+            //   $logs2 = [
+            //     'tanggal' => now(),
+            //     'tabel' => 'TransGaji',
+            //     'aksi' => 'Update',
+            //     'user' => auth()->guard('karyawan')->user()->hak_akses . '-' . auth()->guard('karyawan')->user()->id,
+            //     'ip' => $request->ip(),
+            //     'keterangan' => json_encode(['data' => $dataAlpha]),
+            //     'serial' => url('fetchGaji'),
+            //   ];
 
 
-
+            //   $log->create($logs2);
+            // }
 
             // uang makan
-            if (TransGaji::where('item_gaji_id', 2)->where('gaji_id', $cek->id)->first() != null || TransGaji::where('item_gaji_id', 2)->where('gaji_id', $cek->id)->first() != "") {
+            // if (TransGaji::where('item_gaji_id', 2)->where('gaji_id', $cek->id)->first() != null || TransGaji::where('item_gaji_id', 2)->where('gaji_id', $cek->id)->first() != "") {
 
-              $absensi3 = count(Absensi::whereBetween('tanggal', [$periode->mulai, $periode->selesai])->where('karyawan_id', $cek->karyawan_id)->where('status_absensi', 'H')->get());
-              $konfig = DB::table('konfigs')->first();
-              TransGaji::where('item_gaji_id', 2)->where('gaji_id', $cek->id)->update(['nominal' => $konfig->uang_makan, 'qty' => $absensi3]);
+            //   $absensi3 = count(Absensi::whereBetween('tanggal', [$periode->mulai, $periode->selesai])->where('karyawan_id', $cek->karyawan_id)->where('status_absensi', 'H')->get());
+            //   $konfig = DB::table('konfigs')->first();
+            //   TransGaji::where('item_gaji_id', 2)->where('gaji_id', $cek->id)->update(['nominal' => $uang_makan, 'qty' => $absensi3]);
 
-              $dataMakan = [
-                'gaji_id' => $cek->id,
-                'nominal' => $konfig->uang_makan,
-                'qty' => $absensi3,
-              ];
+            //   $dataMakan = [
+            //     'gaji_id' => $cek->id,
+            //     'nominal' => $uang_makan,
+            //     'qty' => $absensi3,
+            //   ];
 
-              $logs3 = [
-                'tanggal' => now(),
-                'tabel' => 'TransGaji',
-                'aksi' => 'Update',
-                'user' => auth()->guard('karyawan')->user()->hak_akses . '-' . auth()->guard('karyawan')->user()->id,
-                'ip' => $request->ip(),
-                'keterangan' => json_encode(['data' => $dataMakan]),
-                'serial' =>  url('fetchGaji'),
-              ];
-
-
-              $log->create($logs3);
-            }
+            //   $logs3 = [
+            //     'tanggal' => now(),
+            //     'tabel' => 'TransGaji',
+            //     'aksi' => 'Update',
+            //     'user' => auth()->guard('karyawan')->user()->hak_akses . '-' . auth()->guard('karyawan')->user()->id,
+            //     'ip' => $request->ip(),
+            //     'keterangan' => json_encode(['data' => $dataMakan]),
+            //     'serial' =>  url('fetchGaji'),
+            //   ];
 
 
+            //   $log->create($logs3);
+            // }
 
             $lupa_absen =  TransGaji::where('item_gaji_id', 5)->where('gaji_id', $cek->id)->first();
+//lupa absen
+
+            // if (!empty($lupa_absen->id)) {
+
+            //   $absensi4 = count(Absensi::whereBetween('tanggal', [$periode->mulai, $periode->selesai])->where('karyawan_id', $cek->karyawan_id)->where('status_absensi', 'T')->get());
+
+            //   $konfig = DB::table('konfigs')->first();
+
+            //   $nominal =  $uang_makan; // ga dapat uang makan
+
+            //   TransGaji::where('item_gaji_id', 5)->where('gaji_id', $cek->id)->update(['nominal' => $nominal, 'qty' => $absensi4]);
+
+            //   $dataLupa = [
+            //     'gaji_id' => $cek->id,
+            //     'nominal' => $nominal,
+            //     'qty' => $absensi4,
+            //   ];
+
+            //   $logs4 = [
+            //     'tanggal' => now(),
+            //     'tabel' => 'TransGaji',
+            //     'aksi' => 'Update',
+            //     'user' => auth()->guard('karyawan')->user()->hak_akses . '-' . auth()->guard('karyawan')->user()->id,
+            //     'ip' => $request->ip(),
+            //     'keterangan' => json_encode(['data' => $dataLupa]),
+            //     'serial' =>  url('fetchGaji'),
+            //   ];
 
 
-            if (!empty($lupa_absen->id)) {
-
-              $absensi4 = count(Absensi::whereBetween('tanggal', [$periode->mulai, $periode->selesai])->where('karyawan_id', $cek->karyawan_id)->where('status_absensi', 'T')->get());
-
-              $konfig = DB::table('konfigs')->first();
-
-              $nominal =  $uang_makan; // ga dapat uang makan
-
-              TransGaji::where('item_gaji_id', 5)->where('gaji_id', $cek->id)->update(['nominal' => $nominal, 'qty' => $absensi4]);
-
-              $dataLupa = [
-                'gaji_id' => $cek->id,
-                'nominal' => $nominal,
-                'qty' => $absensi4,
-              ];
-
-              $logs4 = [
-                'tanggal' => now(),
-                'tabel' => 'TransGaji',
-                'aksi' => 'Update',
-                'user' => auth()->guard('karyawan')->user()->hak_akses . '-' . auth()->guard('karyawan')->user()->id,
-                'ip' => $request->ip(),
-                'keterangan' => json_encode(['data' => $dataLupa]),
-                'serial' =>  url('fetchGaji'),
-              ];
-
-
-              $log->create($logs4);
-            }
+            //   $log->create($logs4);
+            // }
 
             //bpjs
 
-            if (TransGaji::where('item_gaji_id', 10)->where('gaji_id', $cek->id)->first() != null || TransGaji::where('item_gaji_id', 10)->where('gaji_id', $cek->id)->first() != "") {
-              TransGaji::where('item_gaji_id', 10)->where('gaji_id', $cek->id)->update(['nominal' => 40000, 'qty' => 1]);
-            }
+            // if (TransGaji::where('item_gaji_id', 10)->where('gaji_id', $cek->id)->first() != null || TransGaji::where('item_gaji_id', 10)->where('gaji_id', $cek->id)->first() != "") {
+            //   TransGaji::where('item_gaji_id', 10)->where('gaji_id', $cek->id)->update(['nominal' => 40000, 'qty' => 1]);
+            // }
 
             $transTelat = TransGaji::where('item_gaji_id', 4)
               ->where('gaji_id', $cek->id)
@@ -304,12 +301,12 @@ class PenggajianController extends Controller
 
               $absensiT = Absensi::whereBetween('tanggal', [$periode->mulai, $periode->selesai])
                 ->where('karyawan_id', $cek->karyawan_id)->get();
-
+                $totalPotongan = 0;
+                $jumlahKejadian = 0;
 
               foreach ($absensiT as $itemAbsensi) {
 
-                $totalPotongan = 0;
-                $jumlahKejadian = 0;
+           
 
                 /*
                 |--------------------------------------------------------------------------
@@ -321,7 +318,7 @@ class PenggajianController extends Controller
                   konfigId: $konfig->id,
                   uangMakan: $uang_makan
                 );
-
+               
                 $totalPotongan += $hasilMasuk['potongan'];
                 $jumlahKejadian += $hasilMasuk['qty'];
 
@@ -539,6 +536,9 @@ class PenggajianController extends Controller
                 } // end  if($key->ot_out > 0){
 
               } // end of foreach ($absensiT as $itemAbsensi) {
+
+
+              
                  $transTelat->update([
                     'nominal' => round($totalPotongan),
                     'qty'     => $jumlahKejadian,
@@ -568,6 +568,79 @@ class PenggajianController extends Controller
 
     $this->cuti();
     return back()->with('success', 'Gaji Behasil diFetch');
+  }
+
+  private function hitungPotongan(
+    string $jenisPotongan,
+    int $konfigId,
+    float $nilaiDasar,
+    int $qty = 1,
+    ?int $menit = null
+  ): array {
+      $query = AturanPotongan::query()
+          ->where('konfig_id', $konfigId)
+          ->where('jenis_potongan', $jenisPotongan)
+          ->where('is_active', 1);
+
+      if ($jenisPotongan === 'terlambat' && $menit !== null) {
+          $menit = abs($menit);
+
+          $query
+              ->where('menit_mulai', '<=', $menit)
+              ->where(function ($query) use ($menit) {
+                  $query
+                      ->whereNull('menit_selesai')
+                      ->orWhere('menit_selesai', '>=', $menit);
+              })
+              ->orderByDesc('menit_mulai');
+      } else {
+          $query
+              ->where(function ($query) use ($qty) {
+                  $query
+                      ->whereNull('qty_mulai')
+                      ->orWhere('qty_mulai', '<=', $qty);
+              })
+              ->where(function ($query) use ($qty) {
+                  $query
+                      ->whereNull('qty_selesai')
+                      ->orWhere('qty_selesai', '>=', $qty);
+              })
+              ->orderByDesc('qty_mulai');
+      }
+
+      $aturan = $query->first();
+
+      if (!$aturan) {
+          return [
+              'potongan' => 0,
+              'qty'      => 0,
+              'aturan'   => null,
+          ];
+      }
+
+      if ($aturan->tipe_nilai === 'persen') {
+          $potonganPerKejadian =
+              ((float) $aturan->nilai_potongan / 100)
+              * $nilaiDasar;
+      } else {
+          $potonganPerKejadian =
+              (float) $aturan->nilai_potongan;
+      }
+
+      /*
+      * Untuk keterlambatan, potongan dihitung satu kali
+      * berdasarkan rentang menit.
+      *
+      * Untuk izin, sakit, alpha, lupa absen,
+      * bisa dikalikan jumlah kejadian/hari.
+      */
+      $pengali = $jenisPotongan === 'terlambat' ? 1 : $qty;
+
+      return [
+          'potongan' => round($potonganPerKejadian * $pengali),
+          'qty'      => $pengali,
+          'aturan'   => $aturan,
+      ];
   }
 
   public function insertTransGaji($request, $mulai, $selesai, $periode_id, $karyawan_id, $jabatan_id, $log)
@@ -612,7 +685,7 @@ class PenggajianController extends Controller
         ->leftJoin('item_gajies as b', 'a.item_gaji_id', '=', 'b.id')
         ->where('a.departemen_id', $dept->departement_id)
         ->orderBy('b.kategori_item_id', 'asc')
-        ->select('b.id')
+        ->select('b.id','a.nominal')
         ->get();
 
       foreach ($item as $a) {
@@ -621,9 +694,9 @@ class PenggajianController extends Controller
         $qty_trans;
         if ($a->id == 1) {
 
-          $nom = DB::table('tb_jabatan')->where('id', $jabatan_id)->first();
+          //$nom = DB::table('tb_jabatan')->where('id', $jabatan_id)->first();
 
-          $nominal_gaji = !empty($nom->gaji_pokok) ? $nom->gaji_pokok : 0;
+          $nominal_gaji = !empty($a->nominal) ? $a->nominal : 0;
           $qty_trans = 1;
         } else {
 
@@ -867,7 +940,7 @@ class PenggajianController extends Controller
       'konfig_id',
       $konfigId
     )
-      ->where('is_active', true)
+      ->where('is_active', 1)
       ->where(
         'menit_mulai',
         '<=',
@@ -885,6 +958,8 @@ class PenggajianController extends Controller
       ->orderByDesc('menit_mulai')
       ->first();
 
+      
+
     if (!$aturan) {
       return [
         'potongan' => 0,
@@ -894,9 +969,17 @@ class PenggajianController extends Controller
 
     $persenPotongan = (float) $aturan->persen_potongan;
 
+
     $potongan = (
       $persenPotongan / 100
     ) * $uangMakan;
+
+
+    // echo "<pre>";
+    // print_r(" Persen potongan: $persenPotongan%,  Uang makan: $uangMakan%,  Potongan: $potongan");
+    // echo "</pre>";
+
+
 
     return [
       'potongan' => round($potongan),
