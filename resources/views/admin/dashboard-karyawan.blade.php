@@ -364,14 +364,24 @@
                   @endforeach
                 </select>
               </div>
-              <div class="form-group col-md-6">
-                <label for="inputEmail4">Group Karyawan</label>
-                <input type="text" class="form-control" readonly
-                @if ($dp->groupJadwal !='')
-                  value="{{$dp->groupJadwal->nama_grup}}"
-                @endif
-                >
-              </div>
+            <div class="form-group col-md-6">
+              <label for="group_jadwal_id">Group Karyawan</label>
+
+              <select name="group_jadwal_id" id="group_jadwal_id" class="form-control">
+
+                  <option value="">-- Pilih Group Karyawan --</option>
+
+                  @foreach ($groupJadwal->get() as $gj)
+                      <option
+                          value="{{ $gj->id }}"
+                          {{ $dp->group_jadwal_id == $gj->id ? 'selected' : '' }}
+                      >
+                          {{ $gj->nama_grup }}
+                      </option>
+                  @endforeach
+
+              </select>
+          </div>
             </div>
           </div>
           <div class="modal-footer">

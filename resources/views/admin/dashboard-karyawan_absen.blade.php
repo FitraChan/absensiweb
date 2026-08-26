@@ -78,7 +78,209 @@
     </div>
   </div>
 </div>
+
+
+
+
 @endforeach
+
+<div
+    class="modal fade"
+    id="modal-status-absensi"
+    data-backdrop="static"
+    data-keyboard="false"
+    tabindex="-1"
+    aria-labelledby="modal-status-absensi-Label"
+    aria-hidden="true"
+>
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5
+                    class="modal-title"
+                    id="modal-status-absensi-Label"
+                >
+                    Update Status Absensi
+                </h5>
+
+                <button
+                    type="button"
+                    class="close"
+                    data-dismiss="modal"
+                    aria-label="Close"
+                >
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <form
+                method="POST"
+                action="{{ route('absensi-status.update-range') }}"
+            >
+                @csrf
+                @method('POST')
+
+                <div class="modal-body">
+
+                    <div class="form-row">
+
+                        {{-- Karyawan --}}
+                        <div class="form-group col-md-6">
+                            <label for="karyawan_id">
+                                Nama Karyawan
+                            </label>
+
+                            <select
+                                name="karyawan_id"
+                                id="karyawan_id"
+                                class="form-control"
+                                required
+                            >
+                                <option value="">
+                                    -- Pilih Karyawan --
+                                </option>
+
+                                @foreach ($karyawan as $item)
+                                    <option
+                                        value="{{ $item->id }}">
+                                        {{ $item->nama_lengkap }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                       
+
+                        {{-- Tanggal Mulai --}}
+                        <div class="form-group col-md-6">
+                            <label for="tanggal_mulai_{{ $lks->id }}">
+                                Tanggal Mulai
+                            </label>
+
+                            <input
+                                type="date"
+                                name="tanggal_mulai"
+                                id="tanggal_mulai"
+                                class="form-control"
+                                value="{{ old('tanggal_mulai') }}"
+                                required
+                            >
+                        </div>
+
+                        {{-- Tanggal Selesai --}}
+                        <div class="form-group col-md-6">
+                            <label for="tanggal_selesai">
+                                Tanggal Selesai
+                            </label>
+
+                            <input
+                                type="date"
+                                name="tanggal_selesai"
+                                id="tanggal_selesai"
+                                class="form-control"
+                                value="{{ old('tanggal_selesai') }}"
+                                required
+                            >
+                        </div>
+
+                        {{-- Status Absensi --}}
+                        <div class="form-group col-md-6">
+                            <label for="status_absensi">
+                                Status Absensi
+                            </label>
+
+                            <select
+                                name="status_absensi"
+                                id="status_absensi"
+                                class="form-control"
+                                required
+                            >
+                                <option value="">
+                                    -- Pilih Status --
+                                </option>
+
+                                <option value="I">
+                                    IZIN
+                                </option>
+
+                                <option value="S">
+                                    SAKIT
+                                </option>
+
+                                <option value="A">
+                                    ALPHA
+                                </option>
+
+                                <option value="C">
+                                    CUTI
+                                </option>
+                            </select>
+                        </div>
+
+                        {{-- Tanggal Persetujuan --}}
+                        <div class="form-group col-md-6">
+                            <label>
+                                Tanggal Persetujuan
+                            </label>
+
+                            <input
+                                type="text"
+                                name="tgl_persetujuan"
+                                value="{{ now()->format('d-m-Y H:i:s') }}"
+                                class="form-control"
+                                readonly
+                            >
+                        </div>
+
+                        {{-- Keterangan --}}
+                        <div class="form-group col-md-12">
+                            <label for="keterangan">
+                                Keterangan
+                            </label>
+
+                            <textarea
+                                name="keterangan"
+                                id="keterangan"
+                                class="form-control"
+                                rows="4"
+                                placeholder="Masukkan alasan izin, sakit, alpha, atau cuti"
+                            >{{ old('keterangan') }}</textarea>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        data-dismiss="modal"
+                    >
+                        Tutup
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                        onclick="return confirm(
+                            'Apakah Anda yakin ingin mengubah status absensi pada rentang tanggal tersebut?'
+                        )"
+                    >
+                        Simpan Perubahan
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
 
 
 <div class="container-fluid">
@@ -86,6 +288,15 @@
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800">Keterangan Absensi Karyawan</h1>
   </div>
+
+  <button
+    type="button"
+    class="btn btn-primary"
+    data-toggle="modal"
+    data-target="#modal-status-absensi"
+>
+    Update Absensi
+</button>
 
     <div class="row mb-5">
       <div class="col-sm-5">

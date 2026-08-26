@@ -7,7 +7,6 @@ use App\Models\Log;
 use App\Models\PeriodeGaji;
 use App\Models\TransGaji;
 use App\Models\Lembur;
-use App\Models\AturanKeterlambatan;
 
 
 use App\Models\Gaji;
@@ -107,7 +106,7 @@ class PenggajianController extends Controller
   {
     // code...
     $date = date('Y-m-d');
-    
+
     $periodeGaji = PeriodeGaji::orderBy('id', 'desc')->first();
 
 
@@ -122,7 +121,7 @@ class PenggajianController extends Controller
 
     $lastGaji = Gaji::orderBy('id', 'desc')->first();
 
-    
+
 
     $periodeLastGaji = PeriodeGaji::orderBy('id', 'desc')->first();
 
@@ -136,7 +135,6 @@ class PenggajianController extends Controller
         $makan = DB::table('departemen_item_gaji')->where('departemen_id', $key->departement_id)->where('item_gaji_id', 2)->first();
         $lembur = DB::table('departemen_item_gaji')->where('departemen_id', $key->departement_id)->where('item_gaji_id', 3)->first();
 
-
         $uang_makan = $makan->nominal;
 
         $uang_lembur = $lembur->nominal ?? 0;
@@ -144,11 +142,7 @@ class PenggajianController extends Controller
         //$uang_makan = 
         $salary = Gaji::leftJoin('tb_karyawan', 'tb_karyawan.id', '=', 'gajies.karyawan_id')->where('gajies.karyawan_id', $key->id)->where('periode_gaji_id', $periodeLastGaji->id)->orderBy('gajies.id', 'desc')->get();
 
-
-
-
         foreach ($salary as $a) {
-
 
           //  echo"masuk";
           if (Gaji::where('karyawan_id', $a->karyawan_id)->where('periode_gaji_id', $periodeGaji->id)->first() != null || Gaji::where('karyawan_id', $a->karyawan_id)->where('periode_gaji_id', $periodeGaji->id)->first() != "") { // Update Gaji Karyawan
@@ -163,17 +157,47 @@ class PenggajianController extends Controller
             $gapok = TransGaji::where('gaji_id', $cek->id)->where('item_gaji_id', 1)->sum('nominal');
             $periode = $periodeGaji->where('id', $cek->periode_gaji_id)->first();
             // ijin / sakit
-
-            $absensi1 = count(Absensi::whereBetween('tanggal', [$periode->mulai, $periode->selesai])->where('karyawan_id', $cek->karyawan_id)->where('status_absensi', 'I')->get());
-
+            if (TransGaji::where('item_gaji_id', 6)->where('gaji_id', $cek->id)->first() != null || TransGaji::where('item_gaji_id', 6)->where('gaji_id', $cek->id)->first() != "") {
               $hasilIzin = $this->hitungPotonganBerdasarkanQty(
                 jenisPotongan: 'izin',
                 konfigId: 1,
-                qty: $absensi1,
-                uangMakan: $uang_makan,
-                gajiPokok: $gapok,
-                totalGaji: ''
-            );
+                qty: '',
+                sumberNilai: [
+                  'uang_makan' => $uang_makan,
+                  'gaji_pokok' => $gapok,
+                ],
+                periode: $periode,
+                karyawan_id: $cek->karyawan_id,
+                keterangan: 'I',
+                log: $log
+              );
+
+              TransGaji::where('item_gaji_id', 6)->where('gaji_id', $cek->id)->update(['nominal' => $hasilIzin['potongan'], 'qty' => $hasilIzin['qty']]);
+            }
+            if (TransGaji::where('item_gaji_id', 13)->where('gaji_id', $cek->id)->first() != null || TransGaji::where('item_gaji_id', 6)->where('gaji_id', $cek->id)->first() != "") {
+
+              $hasilSakit = $this->hitungPotonganBerdasarkanQty(
+                jenisPotongan: 'sakit',
+                konfigId: 1,
+                qty: '',
+                sumberNilai: [
+                  'uang_makan' => $uang_makan,
+                  'gaji_pokok' => $gapok,
+                ],
+                periode: $periode,
+                karyawan_id: $cek->karyawan_id,
+                keterangan: 'S',
+                log: $log
+              );
+
+              TransGaji::where('item_gaji_id', 13)->where('gaji_id', $cek->id)->update(['nominal' => $hasilSakit['potongan'], 'qty' => $hasilSakit['qty']]);
+            }
+
+
+
+
+
+
             // if (TransGaji::where('item_gaji_id', 6)->where('gaji_id', $cek->id)->first() != null || TransGaji::where('item_gaji_id', 6)->where('gaji_id', $cek->id)->first() != "") {
 
             //   $absensi1 = count(Absensi::whereBetween('tanggal', [$periode->mulai, $periode->selesai])->where('karyawan_id', $cek->karyawan_id)->where('status_absensi', 'I')->get());
@@ -199,7 +223,23 @@ class PenggajianController extends Controller
 
             //   $log->create($logs);
             // } // end of if
+            if (TransGaji::where('item_gaji_id', 7)->where('gaji_id', $cek->id)->first() != null || TransGaji::where('item_gaji_id', 7)->where('gaji_id', $cek->id)->first() != "") {
+              $hasilAlpha = $this->hitungPotonganBerdasarkanQty(
+                jenisPotongan: 'alpha',
+                konfigId: 1,
+                qty: '',
+                sumberNilai: [
+                  'uang_makan' => $uang_makan,
+                  'gaji_pokok' => $gapok,
+                ],
+                periode: $periode,
+                karyawan_id: $cek->karyawan_id,
+                keterangan: 'A',
+                log: $log
+              );
 
+              TransGaji::where('item_gaji_id', 7)->where('gaji_id', $cek->id)->update(['nominal' => $hasilAlpha['potongan'], 'qty' => $hasilAlpha['qty']]);
+            }
             // alpha
             // if (TransGaji::where('item_gaji_id', 7)->where('gaji_id', $cek->id)->first() != null || TransGaji::where('item_gaji_id', 7)->where('gaji_id', $cek->id)->first() != "") {
 
@@ -228,70 +268,96 @@ class PenggajianController extends Controller
             // }
 
             // uang makan
-            // if (TransGaji::where('item_gaji_id', 2)->where('gaji_id', $cek->id)->first() != null || TransGaji::where('item_gaji_id', 2)->where('gaji_id', $cek->id)->first() != "") {
+            if (TransGaji::where('item_gaji_id', 2)->where('gaji_id', $cek->id)->first() != null || TransGaji::where('item_gaji_id', 2)->where('gaji_id', $cek->id)->first() != "") {
 
-            //   $absensi3 = count(Absensi::whereBetween('tanggal', [$periode->mulai, $periode->selesai])->where('karyawan_id', $cek->karyawan_id)->where('status_absensi', 'H')->get());
-            //   $konfig = DB::table('konfigs')->first();
-            //   TransGaji::where('item_gaji_id', 2)->where('gaji_id', $cek->id)->update(['nominal' => $uang_makan, 'qty' => $absensi3]);
+              $absensi3 = count(Absensi::whereBetween('tanggal', [$periode->mulai, $periode->selesai])->where('karyawan_id', $cek->karyawan_id)->where('status_absensi', 'H')->get());
+              //   $konfig = DB::table('konfigs')->first();
+              TransGaji::where('item_gaji_id', 2)->where('gaji_id', $cek->id)->update(['nominal' => $uang_makan, 'qty' => $absensi3]);
 
-            //   $dataMakan = [
-            //     'gaji_id' => $cek->id,
-            //     'nominal' => $uang_makan,
-            //     'qty' => $absensi3,
-            //   ];
+              $dataMakan = [
+                'gaji_id' => $cek->id,
+                'nominal' => $uang_makan,
+                'qty' => $absensi3,
+              ];
 
-            //   $logs3 = [
-            //     'tanggal' => now(),
-            //     'tabel' => 'TransGaji',
-            //     'aksi' => 'Update',
-            //     'user' => auth()->guard('karyawan')->user()->hak_akses . '-' . auth()->guard('karyawan')->user()->id,
-            //     'ip' => $request->ip(),
-            //     'keterangan' => json_encode(['data' => $dataMakan]),
-            //     'serial' =>  url('fetchGaji'),
-            //   ];
+              $logs3 = [
+                'tanggal' => now(),
+                'tabel' => 'TransGaji',
+                'aksi' => 'Update',
+                'user' => auth()->guard('karyawan')->user()->hak_akses . '-' . auth()->guard('karyawan')->user()->id,
+                'ip' => $request->ip(),
+                'keterangan' => json_encode(['data' => $dataMakan]),
+                'serial' =>  url('fetchGaji'),
+              ];
 
 
-            //   $log->create($logs3);
-            // }
+              $log->create($logs3);
+            }
 
             $lupa_absen =  TransGaji::where('item_gaji_id', 5)->where('gaji_id', $cek->id)->first();
-//lupa absen
+            //lupa absen
 
-            // if (!empty($lupa_absen->id)) {
+            if (!empty($lupa_absen->id)) {
 
-            //   $absensi4 = count(Absensi::whereBetween('tanggal', [$periode->mulai, $periode->selesai])->where('karyawan_id', $cek->karyawan_id)->where('status_absensi', 'T')->get());
+              $hasilLupaAbsen = $this->hitungPotonganBerdasarkanQty(
+                jenisPotongan: 'lupa_absen',
+                konfigId: 1,
+                qty: '',
+                sumberNilai: [
+                  'uang_makan' => $uang_makan,
+                  'gaji_pokok' => $gapok,
+                ],
+                periode: $periode,
+                karyawan_id: $cek->karyawan_id,
+                keterangan: 'T',
+                log: $log
+              );
 
-            //   $konfig = DB::table('konfigs')->first();
+              TransGaji::where('item_gaji_id', 5)->where('gaji_id', $cek->id)->update(['nominal' => $hasilLupaAbsen['potongan'], 'qty' => $hasilLupaAbsen['qty']]);
 
-            //   $nominal =  $uang_makan; // ga dapat uang makan
+              //   $absensi4 = count(Absensi::whereBetween('tanggal', [$periode->mulai, $periode->selesai])->where('karyawan_id', $cek->karyawan_id)->where('status_absensi', 'T')->get());
 
-            //   TransGaji::where('item_gaji_id', 5)->where('gaji_id', $cek->id)->update(['nominal' => $nominal, 'qty' => $absensi4]);
+              //   $konfig = DB::table('konfigs')->first();
 
-            //   $dataLupa = [
-            //     'gaji_id' => $cek->id,
-            //     'nominal' => $nominal,
-            //     'qty' => $absensi4,
-            //   ];
+              //   $nominal =  $uang_makan; // ga dapat uang makan
 
-            //   $logs4 = [
-            //     'tanggal' => now(),
-            //     'tabel' => 'TransGaji',
-            //     'aksi' => 'Update',
-            //     'user' => auth()->guard('karyawan')->user()->hak_akses . '-' . auth()->guard('karyawan')->user()->id,
-            //     'ip' => $request->ip(),
-            //     'keterangan' => json_encode(['data' => $dataLupa]),
-            //     'serial' =>  url('fetchGaji'),
-            //   ];
+              //   TransGaji::where('item_gaji_id', 5)->where('gaji_id', $cek->id)->update(['nominal' => $nominal, 'qty' => $absensi4]);
+
+              //   $dataLupa = [
+              //     'gaji_id' => $cek->id,
+              //     'nominal' => $nominal,
+              //     'qty' => $absensi4,
+              //   ];
+
+              //   $logs4 = [
+              //     'tanggal' => now(),
+              //     'tabel' => 'TransGaji',
+              //     'aksi' => 'Update',
+              //     'user' => auth()->guard('karyawan')->user()->hak_akses . '-' . auth()->guard('karyawan')->user()->id,
+              //     'ip' => $request->ip(),
+              //     'keterangan' => json_encode(['data' => $dataLupa]),
+              //     'serial' =>  url('fetchGaji'),
+              //   ];
 
 
-            //   $log->create($logs4);
-            // }
+              //   $log->create($logs4);
+            }
 
             //bpjs
 
-            // if (TransGaji::where('item_gaji_id', 10)->where('gaji_id', $cek->id)->first() != null || TransGaji::where('item_gaji_id', 10)->where('gaji_id', $cek->id)->first() != "") {
-            //   TransGaji::where('item_gaji_id', 10)->where('gaji_id', $cek->id)->update(['nominal' => 40000, 'qty' => 1]);
-            // }
+            if (TransGaji::where('item_gaji_id', 10)->where('gaji_id', $cek->id)->first() != null || TransGaji::where('item_gaji_id', 10)->where('gaji_id', $cek->id)->first() != "") {
+              $aturan = AturanPotongan::query()
+                ->where('konfig_id', 1)
+                ->where('jenis_potongan', 'bpjs')
+                ->where('is_active', 1)
+                ->orderByDesc('qty_mulai')
+                ->first();
+
+              TransGaji::where('item_gaji_id', 10)->where('gaji_id', $cek->id)
+                ->update(['nominal' => $aturan->nilai_potongan, 'qty' => 1]);
+
+              //   TransGaji::where('item_gaji_id', 10)->where('gaji_id', $cek->id)->update(['nominal' => 40000, 'qty' => 1]);
+            }
 
             $transTelat = TransGaji::where('item_gaji_id', 4)
               ->where('gaji_id', $cek->id)
@@ -301,12 +367,12 @@ class PenggajianController extends Controller
 
               $absensiT = Absensi::whereBetween('tanggal', [$periode->mulai, $periode->selesai])
                 ->where('karyawan_id', $cek->karyawan_id)->get();
-                $totalPotongan = 0;
-                $jumlahKejadian = 0;
+              $totalPotongan = 0;
+              $jumlahKejadian = 0;
 
               foreach ($absensiT as $itemAbsensi) {
 
-           
+
 
                 /*
                 |--------------------------------------------------------------------------
@@ -316,9 +382,12 @@ class PenggajianController extends Controller
                 $hasilMasuk = $this->hitungPotonganKeterlambatan(
                   ot: $itemAbsensi->ot_in,
                   konfigId: $konfig->id,
-                  uangMakan: $uang_makan
+                  sumberNilai: [
+                    'uang_makan' => $uang_makan,
+                    'gaji_pokok' => $gapok,
+                  ],
                 );
-               
+
                 $totalPotongan += $hasilMasuk['potongan'];
                 $jumlahKejadian += $hasilMasuk['qty'];
 
@@ -330,7 +399,10 @@ class PenggajianController extends Controller
                 $hasilPulang = $this->hitungPotonganKeterlambatan(
                   ot: $itemAbsensi->ot_out,
                   konfigId: $konfig->id,
-                  uangMakan: $uang_makan
+                  sumberNilai: [
+                    'uang_makan' => $uang_makan,
+                    'gaji_pokok' => $gapok,
+                  ],
                 );
 
                 $totalPotongan += $hasilPulang['potongan'];
@@ -538,11 +610,11 @@ class PenggajianController extends Controller
               } // end of foreach ($absensiT as $itemAbsensi) {
 
 
-              
-                 $transTelat->update([
-                    'nominal' => round($totalPotongan),
-                    'qty'     => $jumlahKejadian,
-                ]);
+
+              $transTelat->update([
+                'nominal' => round($totalPotongan),
+                'qty'     => $jumlahKejadian,
+              ]);
             } // end of  if ($transTelat) {
           } // end of if (Gaji::where('karyawan_id', $a->karyawan_id)->where('periode_gaji_id', $periodeGaji->id)->first() != null || Gaji::where('karyawan_id', $a->karyawan_id)->where('periode_gaji_id', $periodeGaji->id)->first() != "") { // Update Gaji Karyawan
 
@@ -570,77 +642,183 @@ class PenggajianController extends Controller
     return back()->with('success', 'Gaji Behasil diFetch');
   }
 
-  private function hitungPotongan(
-    string $jenisPotongan,
-    int $konfigId,
-    float $nilaiDasar,
-    int $qty = 1,
-    ?int $menit = null
+  private function hitungPotonganBerdasarkanQty(
+    $jenisPotongan,
+    $konfigId,
+    $qty,
+    array $sumberNilai,
+    $periode,
+    $karyawan_id,
+    $keterangan,
+    $log
   ): array {
-      $query = AturanPotongan::query()
-          ->where('konfig_id', $konfigId)
-          ->where('jenis_potongan', $jenisPotongan)
-          ->where('is_active', 1);
+    // if ($qty <= 0) {
+    //     return [
+    //         'potongan'      => 0,
+    //         'qty'           => 0,
+    //         'nilai_dasar'   => 0,
+    //         'aturan_id'     => null,
+    //         'nama_aturan'   => null,
+    //     ];
+    // }
 
-      if ($jenisPotongan === 'terlambat' && $menit !== null) {
-          $menit = abs($menit);
+    $aturan = AturanPotongan::query()
+      ->where('konfig_id', $konfigId)
+      ->where('jenis_potongan', $jenisPotongan)
+      ->where('is_active', 1)
+      ->orderByDesc('qty_mulai')
+      ->first();
 
-          $query
-              ->where('menit_mulai', '<=', $menit)
-              ->where(function ($query) use ($menit) {
-                  $query
-                      ->whereNull('menit_selesai')
-                      ->orWhere('menit_selesai', '>=', $menit);
-              })
-              ->orderByDesc('menit_mulai');
-      } else {
-          $query
-              ->where(function ($query) use ($qty) {
-                  $query
-                      ->whereNull('qty_mulai')
-                      ->orWhere('qty_mulai', '<=', $qty);
-              })
-              ->where(function ($query) use ($qty) {
-                  $query
-                      ->whereNull('qty_selesai')
-                      ->orWhere('qty_selesai', '>=', $qty);
-              })
-              ->orderByDesc('qty_mulai');
-      }
+    $absensi1 = count(Absensi::whereBetween('tanggal', [$periode->mulai, $periode->selesai])->where('karyawan_id', $karyawan_id)->where('status_absensi', $keterangan)->get());
 
-      $aturan = $query->first();
+    // $nominal = !empty($uangMakan) ? $uangMakan : $gajiPokok;
 
-      if (!$aturan) {
-          return [
-              'potongan' => 0,
-              'qty'      => 0,
-              'aturan'   => null,
-          ];
-      }
+    $nominal = (float) (
+      $sumberNilai[$aturan->sumber_potongan]
+      ?? 0
+    );
 
-      if ($aturan->tipe_nilai === 'persen') {
-          $potonganPerKejadian =
-              ((float) $aturan->nilai_potongan / 100)
-              * $nilaiDasar;
-      } else {
-          $potonganPerKejadian =
-              (float) $aturan->nilai_potongan;
-      }
 
-      /*
-      * Untuk keterlambatan, potongan dihitung satu kali
-      * berdasarkan rentang menit.
-      *
-      * Untuk izin, sakit, alpha, lupa absen,
-      * bisa dikalikan jumlah kejadian/hari.
-      */
-      $pengali = $jenisPotongan === 'terlambat' ? 1 : $qty;
 
+
+
+
+    if (!$aturan) {
       return [
-          'potongan' => round($potonganPerKejadian * $pengali),
-          'qty'      => $pengali,
-          'aturan'   => $aturan,
+        'potongan'      => 0,
+        'qty'           => 0,
+        'nilai_dasar'   => 0,
+        'aturan_id'     => null,
+        'nama_aturan'   => null,
       ];
+    }
+
+    // $persenPotongan = (float) $aturan->nilai_potongan;
+
+    $potongan = 0;
+
+    if ($aturan->tipe_nilai === 'persen') {
+
+      $potongan =
+        ((float) $aturan->nilai_potongan / 100)
+        * $nominal;
+    } else {
+
+      $potongan =
+        (float) $aturan->nilai_potongan;
+    }
+
+    $logs = [
+      'tanggal' => now(),
+      'tabel' => 'TransGaji',
+      'aksi' => 'Update',
+      'user' => auth()->guard('karyawan')->user()->hak_akses . '-' . auth()->guard('karyawan')->user()->id,
+      'ip' => '',
+      'keterangan' => json_encode([
+        'potongan' => round($potongan),
+        'qty'      => $absensi1,
+        'jenis_potongan' => $jenisPotongan,
+      ]),
+      'serial' => url('fetchGaji'),
+    ];
+
+
+    $log->create($logs);
+
+
+
+    return [
+      'potongan' => round($potongan),
+      'qty'      => $absensi1,
+
+    ];
+  }
+
+  private function hitungPotonganKeterlambatan(
+    $ot,
+    int $konfigId,
+    array $sumberNilai
+  ): array {
+    /*
+    |--------------------------------------------------------------------------
+    | Null atau nol berarti tidak ada keterlambatan
+    |--------------------------------------------------------------------------
+    */
+    if (is_null($ot) || (float) $ot >= 0) {
+      return [
+        'potongan' => 0,
+        'qty'      => 0,
+      ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Data ot bernilai negatif, contoh -15.
+    | Ubah menjadi positif agar cocok dengan tabel aturan: 15 menit.
+    |--------------------------------------------------------------------------
+    */
+    $menitTerlambat = abs((int) $ot);
+
+    $aturan = AturanPotongan::where(
+      'konfig_id',
+      $konfigId
+    )
+      ->where('is_active', 1)
+      ->where(
+        'menit_mulai',
+        '<=',
+        $menitTerlambat
+      )
+      ->where(function ($query) use ($menitTerlambat) {
+        $query
+          ->whereNull('menit_selesai')
+          ->orWhere(
+            'menit_selesai',
+            '>=',
+            $menitTerlambat
+          );
+      })
+      ->orderByDesc('menit_mulai')
+      ->first();
+
+
+
+    if (!$aturan) {
+      return [
+        'potongan' => 0,
+        'qty'      => 0,
+      ];
+    }
+
+    $nominal = (float) (
+      $sumberNilai[$aturan->sumber_potongan]
+      ?? 0
+    );
+
+    $potongan = 0;
+
+    if ($aturan->tipe_nilai === 'persen') {
+
+      $potongan =
+        ((float) $aturan->nilai_potongan / 100)
+        * $nominal;
+    } else {
+
+      $potongan =
+        (float) $aturan->nilai_potongan;
+    }
+
+
+    // echo "<pre>";
+    // print_r(" Persen potongan: $persenPotongan%,  Uang makan: $uangMakan%,  Potongan: $potongan");
+    // echo "</pre>";
+
+
+
+    return [
+      'potongan' => round($potongan),
+      'qty'      => 1,
+    ];
   }
 
   public function insertTransGaji($request, $mulai, $selesai, $periode_id, $karyawan_id, $jabatan_id, $log)
@@ -685,7 +863,7 @@ class PenggajianController extends Controller
         ->leftJoin('item_gajies as b', 'a.item_gaji_id', '=', 'b.id')
         ->where('a.departemen_id', $dept->departement_id)
         ->orderBy('b.kategori_item_id', 'asc')
-        ->select('b.id','a.nominal')
+        ->select('b.id', 'a.nominal')
         ->get();
 
       foreach ($item as $a) {
@@ -806,18 +984,358 @@ class PenggajianController extends Controller
     // Generate multiple PDF files
     foreach ($trans as $z) {
 
+      // Ambil gapok karyawan
+      $gapok = DB::table('departemen_item_gaji')
+        ->where('departemen_id', $z->karyawan->departement_id)
+        ->where('item_gaji_id', 1)
+        ->value('nominal');
+
+
+     
+
+      // Ambil aturan potongan karyawan/perusahaan
+      $aturanPotongan = DB::table('aturan_potongan')
+        ->where('konfig_id', 1)
+        ->where('is_active', 1)
+        ->get();
+
+      /*
+    |--------------------------------------------------------------------------
+    | TOTAL
+    |--------------------------------------------------------------------------
+    */
+
+      $totalPotongan = 0;
+      $totalOtIn = 0;
+      $totalOtOut = 0;
+
+      $totH = 0;
+      $totI = 0;
+      $totS = 0;
+      $totC = 0;
+      $totA = 0;
+      $totT = 0;
+
+      /*
+    |--------------------------------------------------------------------------
+    | LOOP ABSENSI
+    |--------------------------------------------------------------------------
+    */
+
+      foreach ($z->absensi as $absen) {
+
+       $makan = DB::table('departemen_item_gaji')->where('departemen_id', $absen->karyawan->departement_id)->where('item_gaji_id', 2)->first();
+
+
+      $uangMakan = $makan->nominal;
+
+        $potongan = 0;
+
+        $otIn = (int) ($absen->ot_in ?? 0);
+        $otOut = (int) ($absen->ot_out ?? 0);
+
+        /*
+        |--------------------------------------------------------------------------
+        | TERLAMBAT MASUK
+        |--------------------------------------------------------------------------
+        */
+
+        if ($otIn < 0 && $absen->status_absensi != 'T') {
+
+          $menitTerlambat = abs($otIn);
+
+          $aturan = $aturanPotongan
+            ->where('jenis_potongan', 'terlambat')
+            ->filter(function ($item) use ($menitTerlambat) {
+
+              $mulai = (int) ($item->menit_mulai ?? 0);
+              $selesai = $item->menit_selesai !== null
+                ? (int) $item->menit_selesai
+                : PHP_INT_MAX;
+
+              return $menitTerlambat >= $mulai
+                && $menitTerlambat <= $selesai;
+            })
+            ->first();
+
+          if ($aturan) {
+
+            if ($aturan->tipe_nilai == 'nominal') {
+
+              $telatIn = (float) $aturan->nilai_potongan;
+            } else {
+
+              $dasar = $aturan->sumber_potongan == 'gaji_pokok'
+                ? $gapok
+                : $uangMakan;
+
+              $telatIn = ($aturan->nilai_potongan / 100) * $dasar;
+            }
+
+            $potongan += $telatIn;
+          }
+
+          $totalOtIn += $otIn;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PULANG LEBIH CEPAT
+        |--------------------------------------------------------------------------
+        */
+
+        if ($otOut < 0 && $absen->status_absensi != 'T') {
+
+          $menitPulangCepat = abs($otOut);
+
+          $aturan = $aturanPotongan
+            ->where('jenis_potongan', 'terlambat')
+            ->filter(function ($item) use ($menitPulangCepat) {
+
+              $mulai = (int) ($item->menit_mulai ?? 0);
+
+              $selesai = $item->menit_selesai !== null
+                ? (int) $item->menit_selesai
+                : PHP_INT_MAX;
+
+              return $menitPulangCepat >= $mulai
+                && $menitPulangCepat <= $selesai;
+            })
+            ->first();
+
+          if ($aturan) {
+
+            if ($aturan->tipe_nilai == 'nominal') {
+
+              $telatOut = (float) $aturan->nilai_potongan;
+            } else {
+
+              $dasar = $aturan->sumber_potongan == 'gaji_pokok'
+                ? $gapok
+                : $uangMakan;
+
+              $telatOut = ($aturan->nilai_potongan / 100) * $dasar;
+            }
+
+            $potongan += $telatOut;
+          }
+
+          $totalOtOut += $otOut;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | STATUS ABSENSI
+        |--------------------------------------------------------------------------
+        */
+
+        switch ($absen->status_absensi) {
+
+          case 'H':
+
+            $totH++;
+
+            break;
+
+
+          case 'C':
+
+            $totC++;
+
+            break;
+
+
+          case 'I':
+
+            $totI++;
+
+            $aturan = $aturanPotongan
+              ->where('jenis_potongan', 'izin')
+              ->where('qty_mulai', '<=', 1)
+              ->first();
+
+            if ($aturan) {
+
+              if ($aturan->tipe_nilai == 'nominal') {
+
+                $potongan += $aturan->nilai_potongan;
+              } else {
+
+                $dasar = $aturan->sumber_potongan == 'gaji_pokok'
+                  ? $gapok
+                  : $uangMakan;
+
+                $potongan +=
+                  ($aturan->nilai_potongan / 100) * $dasar;
+              }
+            }
+
+            break;
+
+
+          case 'S':
+
+            $totS++;
+
+            $aturan = $aturanPotongan
+              ->where('jenis_potongan', 'sakit')
+              ->where('qty_mulai', '<=', 1)
+              ->first();
+
+            if ($aturan) {
+
+              if ($aturan->tipe_nilai == 'nominal') {
+
+                $potongan += $aturan->nilai_potongan;
+              } else {
+
+                $dasar = $aturan->sumber_potongan == 'gaji_pokok'
+                  ? $gapok
+                  : $uangMakan;
+
+                $potongan +=
+                  ($aturan->nilai_potongan / 100) * $dasar;
+              }
+            }
+
+            break;
+
+
+          case 'A':
+
+            $totA++;
+
+            $aturan = $aturanPotongan
+              ->where('jenis_potongan', 'alpha')
+              ->where('qty_mulai', '<=', 1)
+              ->first();
+
+            if ($aturan) {
+
+              if ($aturan->tipe_nilai == 'nominal') {
+
+                $potongan += $aturan->nilai_potongan;
+              } else {
+
+                $dasar = $aturan->sumber_potongan == 'gaji_pokok'
+                  ? $gapok
+                  : $uangMakan;
+
+                $potongan +=
+                  ($aturan->nilai_potongan / 100) * $dasar;
+              }
+            }
+
+            break;
+
+
+          case 'T':
+
+            $totT++;
+
+            $aturan = $aturanPotongan
+              ->where('jenis_potongan', 'lupa_absen')
+              ->where('qty_mulai', '<=', 1)
+              ->first();
+
+            if ($aturan) {
+
+              if ($aturan->tipe_nilai == 'nominal') {
+
+                $potongan += $aturan->nilai_potongan;
+              } else {
+
+                $dasar = $aturan->sumber_potongan == 'gaji_pokok'
+                  ? $gapok
+                  : $uangMakan;
+
+                $potongan +=
+                  ($aturan->nilai_potongan / 100) * $dasar;
+              }
+            }
+
+            break;
+        }
+
+
+        $totalPotongan += $potongan;
+
+        /*
+        |--------------------------------------------------------------------------
+        | SIMPAN HASIL PER ABSENSI
+        |--------------------------------------------------------------------------
+        */
+
+        $absen->potongan_hitung = round($potongan);
+      }
+
+
+      /*
+    |--------------------------------------------------------------------------
+    | DATA UNTUK BLADE
+    |--------------------------------------------------------------------------
+    */
+
       $data = [
-        'mulai' => strftime('%d %B %Y', strtotime($z->periodeGaji->mulai)),
-        'selesai' => strftime('%d %B %Y', strtotime($z->periodeGaji->selesai)),
+
+        'mulai' => strftime(
+          '%d %B %Y',
+          strtotime($z->periodeGaji->mulai)
+        ),
+
+        'selesai' => strftime(
+          '%d %B %Y',
+          strtotime($z->periodeGaji->selesai)
+        ),
+
         'nama' => $z->karyawan->nama_lengkap,
+
         'absensi' => $z->absensi,
-        'gapok' => DB::table('departemen_item_gaji')->where('departemen_id', $z->karyawan->departement_id)->where('item_gaji_id', 1)->value('nominal'),
+
+        'gapok' => $gapok,
+
         'konfig' => DB::table('konfigs')->first(),
+
+        'total_potongan' => round($totalPotongan),
+
+        'total_ot_in' => $totalOtIn,
+
+        'total_ot_out' => $totalOtOut,
+
+        'tot_h' => $totH,
+
+        'tot_i' => $totI,
+
+        'tot_s' => $totS,
+
+        'tot_c' => $totC,
+
+        'tot_a' => $totA,
+
+        'tot_t' => $totT,
       ];
 
-      $pdf = Pdf::loadView('admin.cetakPdfAbsensiMultiple', $data);
+
+      /*
+    |--------------------------------------------------------------------------
+    | GENERATE PDF
+    |--------------------------------------------------------------------------
+    */
+
+      $pdf = Pdf::loadView(
+        'admin.cetakPdfAbsensiMultiple',
+        $data
+      );
+
+
       $filename = "employee_{$z->karyawan->nama_lengkap}.pdf";
-      $pdf->save($storagePath . $filename);
+
+      $pdf->save(
+        $storagePath . $filename
+      );
+
       $pdfFiles[] = $storagePath . $filename;
     }
 
@@ -845,145 +1363,162 @@ class PenggajianController extends Controller
 
   public function downloadMultipleGaji(Request $request)
   {
-
     $kary = Karyawan::first();
-    $per =  Gaji::where('karyawan_id', $kary->id)->orderBy('id', 'desc')->first();
-    $gaji = Gaji::with(['karyawan'])->where('periode_gaji_id', $per->periode_gaji_id)->get();
-    $data['periode'] = PeriodeGaji::where('id', $per->periode_gaji_id)->first();
-    // code...
 
+    if (!$kary) {
+      return back()->with('error', 'Data karyawan tidak ditemukan.');
+    }
 
+    $per = Gaji::where('karyawan_id', $kary->id)
+      ->orderByDesc('id')
+      ->first();
+
+    if (!$per) {
+      return back()->with('error', 'Data gaji tidak ditemukan.');
+    }
+
+    $periode = PeriodeGaji::find($per->periode_gaji_id);
+
+    $gaji = Gaji::with([
+      'karyawan.departement',
+      'karyawan.jabatan',
+      'periodeGaji',
+      'transGaji.itemGaji',
+    ])
+      ->where('periode_gaji_id', $per->periode_gaji_id)
+      ->get();
 
     $pdfFiles = [];
+
     $storagePath = storage_path('app/public/pengguna/');
 
     if (!file_exists($storagePath)) {
       mkdir($storagePath, 0777, true);
     }
 
-    // Generate multiple PDF files
     foreach ($gaji as $z) {
-      $deptId = $z->karyawan->departement->id;
 
-      $data = [
-        'try' =>  DB::table('kategori_items as a')
-          ->leftJoin('item_gajies as b', 'b.kategori_item_id', '=', 'a.id')
-          ->rightJoin('departemen_item_gaji as c', 'c.item_gaji_id', '=', 'b.id')
+      if (!$z->karyawan) {
+        continue;
+      }
+
+      $deptId = $z->karyawan->departement?->id;
+
+      $kategoriDepartemen = collect();
+
+      if ($deptId) {
+        $kategoriDepartemen = DB::table('kategori_items as a')
+          ->leftJoin(
+            'item_gajies as b',
+            'b.kategori_item_id',
+            '=',
+            'a.id'
+          )
+          ->rightJoin(
+            'departemen_item_gaji as c',
+            'c.item_gaji_id',
+            '=',
+            'b.id'
+          )
           ->where('c.departemen_id', $deptId)
           ->orderBy('a.id')
-          ->selectRaw('a.id')
-          ->get(),
-        'kategori' => KategoriItem::get(),
-        'transGaji' => $z->transGaji,
+          ->select('a.id')
+          ->distinct()
+          ->get();
+      }
+
+      $data = [
+        'try'          => $kategoriDepartemen,
+        'kategori'     => KategoriItem::all(),
+        'transGaji'    => $z->transGaji,
         'nama_lengkap' => $z->karyawan->nama_lengkap,
         'nama_jabatan' => $z->karyawan?->jabatan?->nama_jabatan,
-        'bulan' => date('m', strtotime($z->periodeGaji->mulai)),
-        'tahun' => date('Y', strtotime($z->periodeGaji->mulai)),
-        'periode' => PeriodeGaji::where('id', $per->periode_gaji_id)->first(),
-
+        'bulan'        => date(
+          'm',
+          strtotime($z->periodeGaji->mulai)
+        ),
+        'tahun'        => date(
+          'Y',
+          strtotime($z->periodeGaji->mulai)
+        ),
+        'periode'      => $periode,
+        'gaji'         => $z,
       ];
 
-      $pdf = Pdf::loadView('admin.cetakGajiMultiple', $data);
-      $filename = "employee_{$z->karyawan->nama_lengkap}.pdf";
-      $pdf->save($storagePath . $filename);
-      $pdfFiles[] = $storagePath . $filename;
+      // $pdf = Pdf::loadView(
+      //     'admin.cetakGajiMultiple',
+      //     $data
+      // )->setPaper('a4', 'portrait');
+
+      $pdf = Pdf::loadView(
+        'admin.cetakGaji',
+        $data
+      )->setPaper('a4', 'portrait');
+
+      $nama = Str::slug(
+        $z->karyawan->nama_lengkap,
+        '_'
+      );
+
+      $filename = "slip_gaji_{$nama}.pdf";
+
+      $path = $storagePath . $filename;
+
+      $pdf->save($path);
+
+      $pdfFiles[] = $path;
     }
 
-    //  return view('admin.cetakGajiMultiple', $data);
-
-    // Buat ZIP
-    $zipFileName = storage_path('app/public/multiple_gaji.zip');
-    $zip = new ZipArchive;
-
-    if ($zip->open($zipFileName, ZipArchive::CREATE) === TRUE) {
-      foreach ($pdfFiles as $file) {
-        $zip->addFile($file, basename($file));
-      }
-      $zip->close();
+    if (empty($pdfFiles)) {
+      return back()->with(
+        'error',
+        'Tidak ada PDF yang berhasil dibuat.'
+      );
     }
 
-    // Hapus file PDF setelah ZIP dibuat
+    $zipFileName = storage_path(
+      'app/public/slip_gaji_' .
+        date('Ymd_His') .
+        '.zip'
+    );
+
+    $zip = new ZipArchive();
+
+    if (
+      $zip->open(
+        $zipFileName,
+        ZipArchive::CREATE |
+          ZipArchive::OVERWRITE
+      ) !== true
+    ) {
+      return back()->with(
+        'error',
+        'Gagal membuat file ZIP.'
+      );
+    }
+
     foreach ($pdfFiles as $file) {
-      unlink($file);
+      $zip->addFile(
+        $file,
+        basename($file)
+      );
     }
 
-    // Download ZIP
-    return response()->download($zipFileName)->deleteFileAfterSend(true);
-  }
+    $zip->close();
 
-  private function hitungPotonganKeterlambatan(
-    $ot,
-    int $konfigId,
-    float $uangMakan
-  ): array {
-    /*
-    |--------------------------------------------------------------------------
-    | Null atau nol berarti tidak ada keterlambatan
-    |--------------------------------------------------------------------------
-    */
-    if (is_null($ot) || (float) $ot >= 0) {
-      return [
-        'potongan' => 0,
-        'qty'      => 0,
-      ];
+    foreach ($pdfFiles as $file) {
+      if (file_exists($file)) {
+        unlink($file);
+      }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Data ot bernilai negatif, contoh -15.
-    | Ubah menjadi positif agar cocok dengan tabel aturan: 15 menit.
-    |--------------------------------------------------------------------------
-    */
-    $menitTerlambat = abs((int) $ot);
-
-    $aturan = AturanKeterlambatan::where(
-      'konfig_id',
-      $konfigId
-    )
-      ->where('is_active', 1)
-      ->where(
-        'menit_mulai',
-        '<=',
-        $menitTerlambat
+    return response()
+      ->download(
+        $zipFileName,
+        'Slip_Gaji_' .
+          $periode->nama_periode .
+          '.zip'
       )
-      ->where(function ($query) use ($menitTerlambat) {
-        $query
-          ->whereNull('menit_selesai')
-          ->orWhere(
-            'menit_selesai',
-            '>=',
-            $menitTerlambat
-          );
-      })
-      ->orderByDesc('menit_mulai')
-      ->first();
-
-      
-
-    if (!$aturan) {
-      return [
-        'potongan' => 0,
-        'qty'      => 0,
-      ];
-    }
-
-    $persenPotongan = (float) $aturan->persen_potongan;
-
-
-    $potongan = (
-      $persenPotongan / 100
-    ) * $uangMakan;
-
-
-    // echo "<pre>";
-    // print_r(" Persen potongan: $persenPotongan%,  Uang makan: $uangMakan%,  Potongan: $potongan");
-    // echo "</pre>";
-
-
-
-    return [
-      'potongan' => round($potongan),
-      'qty'      => 1,
-    ];
+      ->deleteFileAfterSend(true);
   }
 }

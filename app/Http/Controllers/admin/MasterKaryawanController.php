@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Agama;
 use App\Models\Dapartement;
 use App\Models\Jabatan;
+use App\Models\GroupJadwal;
+
 use App\Models\Cuti;
 use App\Models\Log;
 use App\Models\Karyawan;
@@ -15,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Str;
 use Auth;
+use Svg\Tag\Group;
 
 class MasterKaryawanController extends Controller
 {
@@ -23,7 +26,7 @@ class MasterKaryawanController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Karyawan $karyawan, Request $request, Jabatan $jabatan, Dapartement $dapartement, Agama $agama, Pendidikan $pendidikan)
+    public function index(Karyawan $karyawan, Request $request, Jabatan $jabatan, Dapartement $dapartement, Agama $agama, Pendidikan $pendidikan,GroupJadwal $groupJadwal)
     {
 			$data = $karyawan->get();
 			if ($request->ajax()) {
@@ -33,6 +36,30 @@ class MasterKaryawanController extends Controller
 						return '
 						<button type="button" class="btn btn-warning" data-toggle="modal" data-target="#ubah-'.$data->id.'"><i class="fas fa-pen"></i></button>
 						<a onclick="confirm_delete( \''.route('karyawan.destroy',$data->id).'\', \'Are you sure want to delete data ?\')" class="btn btn-danger text-light"><i class="fas fa-trash "></i></a>
+						 <form
+                        action="'.route('findSundaysToKaryawan').'"
+                        method="POST"
+                        style="display:inline-block;"
+                    >
+                        '.csrf_field().'
+
+                        <input
+                            type="hidden"
+                            name="karyawan_id"
+                            value="'.$data->id.'"
+                        >
+
+                        <button
+                            type="submit"
+                            class="btn btn-success"
+                            title="Generate Absensi"
+                            onclick="return confirm(
+                                \'Generate absensi untuk karyawan ini?\'
+                            )"
+                        >
+                            <i class="fas fa-calendar-check"></i>
+                        </button>
+                    </form>
 						';
 					})
 					->editColumn('departement_id',function ($row)
@@ -41,12 +68,12 @@ class MasterKaryawanController extends Controller
 					})
 					->editColumn('jabatan_id',function ($row)
 					{
-						return $row->jabatan->nama_jabatan;
+						return $row->jabatan?->nama_jabatan;
 					})
 					->rawColumns(['action'])
 					->make(true);
 			}
-			return view('admin.dashboard-karyawan', compact('data','jabatan','dapartement', 'agama', 'pendidikan'))->with(['cekNav2' => 'karyawan']);
+			return view('admin.dashboard-karyawan', compact('data','jabatan','dapartement', 'agama', 'pendidikan','groupJadwal'))->with(['cekNav2' => 'karyawan']);
     }
 
     /**

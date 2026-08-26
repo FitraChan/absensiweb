@@ -119,7 +119,7 @@ class MasterGroupController extends Controller
 						';
 					})
 					->editColumn('jabatan_id',function ($data){
-						return $data->jabatan->nama_jabatan;
+						return $data->jabatan?->nama_jabatan;
 					})
 					->rawColumns(['action'])
 					->make(true);

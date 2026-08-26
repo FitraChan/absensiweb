@@ -272,6 +272,168 @@ class MasterGajiController extends Controller
     }
   }
 
+ public function findSundaysToKaryawan(Request $request)
+{
+    $request->validate([
+        'karyawan_id' => 'required|integer|exists:tb_karyawan,id',
+    ]);
+
+    $cekPeriode = PeriodeGaji::orderByDesc('id')->first();
+
+    if (!$cekPeriode) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Periode gaji tidak ditemukan.',
+        ], 404);
+    }
+
+    $karyawan = Karyawan::find($request->karyawan_id);
+
+    if (!$karyawan) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Karyawan tidak ditemukan.',
+        ], 404);
+    }
+
+    try {
+
+        $transAbsen = TransAbsen::create([
+            'karyawan_id' => $karyawan->id,
+            'periode_gaji_id' => $cekPeriode->id,
+        ]);
+
+        $startDate = \Carbon\Carbon::parse(
+            $cekPeriode->mulai
+        );
+
+        $endDate = \Carbon\Carbon::parse(
+            $cekPeriode->selesai
+        );
+
+        $sundays = [];
+
+        while ($startDate->lte($endDate)) {
+
+            $tanggal = $startDate->toDateString();
+
+            $cek = Absensi::where(
+                'karyawan_id',
+                $karyawan->id
+            )
+            ->where(
+                'tanggal',
+                $tanggal
+            )
+            ->first();
+
+            /*
+            |--------------------------------------------------------------------------
+            | BUAT ABSENSI JIKA BELUM ADA
+            |--------------------------------------------------------------------------
+            */
+
+            if (!$cek) {
+
+                $status = 'A';
+
+                // Sabtu / Minggu = Libur
+                if (
+                    $startDate->isSaturday() ||
+                    $startDate->isSunday()
+                ) {
+                    $status = 'L';
+                }
+
+                $data = [
+                    'karyawan_id' => $karyawan->id,
+                    'tanggal' => $tanggal,
+                    'status_absensi' => $status,
+                    'trans_absen_id' => $transAbsen->id,
+                ];
+
+                Absensi::create($data);
+
+                $logs5 = [
+                    'tanggal' => now(),
+                    'tabel' => 'tb_absensi',
+                    'aksi' => 'Create',
+                    'user' =>
+                        auth()
+                            ->guard('karyawan')
+                            ->user()
+                            ->hak_akses
+                        . '-'
+                        . auth()
+                            ->guard('karyawan')
+                            ->user()
+                            ->id,
+                    'ip' => $request->ip(),
+                    'keterangan' => json_encode([
+                        'data' => $data,
+                    ]),
+                    'serial' => url('fetchGaji'),
+                ];
+
+                Log::create($logs5);
+
+            } else {
+
+                /*
+                |--------------------------------------------------------------------------
+                | KALAU SUDAH ADA DAN SABTU / MINGGU
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    $startDate->isSaturday() ||
+                    $startDate->isSunday()
+                ) {
+                    $cek->update([
+                        'status_absensi' => 'L',
+                    ]);
+                }
+            }
+
+            if ($startDate->isSunday()) {
+                $sundays[] = $tanggal;
+            }
+
+            $startDate->addDay();
+        }
+
+        return back()->with('success', 'Berhasil');
+
+        // return response()->json([
+        //     'status' => true,
+        //     'message' => 'Absensi berhasil dibuat.',
+        //     'karyawan' => [
+        //         'id' => $karyawan->id,
+        //         'nama' => $karyawan->nama_lengkap,
+        //     ],
+        //     'periode' => [
+        //         'id' => $cekPeriode->id,
+        //         'mulai' => $cekPeriode->mulai,
+        //         'selesai' => $cekPeriode->selesai,
+        //     ],
+        //     'minggu' => $sundays,
+        // ]);
+
+    } catch (\Exception $e) {
+
+        \Log::error(
+            'Gagal membuat absensi karyawan: '
+            . $e->getMessage()
+        );
+
+        return response()->json([
+            'status' => false,
+            'message' => 'Gagal membuat absensi.',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+}
+
   /**
    * Display the specified resource.
    *

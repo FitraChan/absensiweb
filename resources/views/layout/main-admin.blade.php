@@ -151,6 +151,8 @@
                         <a class="collapse-item @if (isset($cekNav2) && $cekNav2 == 'grup') active @endif" href="{{url('groupKerja')}}"><i class="fas fa-database"></i> Group Shift</a>
 
                         <a class="collapse-item @if (isset($cekNav2) && $cekNav2 == 'libur') active @endif" href="{{url('penentuanLibur')}}"><i class="fas fa-database"></i> Setting Libur</a>
+                        <a class="collapse-item @if (isset($cekNav2) && $cekNav2 == 'item-gaji') active @endif" href="{{url('item-gaji')}}"><i class="fas fa-database"></i> Item Gaji</a>
+                        <a class="collapse-item @if (isset($cekNav2) && $cekNav2 == 'aturan-potongan') active @endif" href="{{url('aturan-potongan')}}"><i class="fas fa-database"></i> Aturan Potongan</a>
 
 
                     </div>
