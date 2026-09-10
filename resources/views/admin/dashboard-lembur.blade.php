@@ -6,6 +6,129 @@
 
 <!-- Modal -->
 
+<!-- Modal Tambah Lembur -->
+<div
+    class="modal fade"
+    id="staticBackdrop"
+    data-backdrop="static"
+    data-keyboard="false"
+    tabindex="-1"
+    aria-labelledby="staticBackdropLabel"
+    aria-hidden="true"
+>
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="staticBackdropLabel">
+                    Tambah Data Lembur
+                </h5>
+
+                <button
+                    type="button"
+                    class="close"
+                    data-dismiss="modal"
+                    aria-label="Close"
+                >
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <form
+                action="{{ route('lembur.store') }}"
+                method="POST"
+            >
+                @csrf
+
+                <div class="modal-body">
+
+                    <!-- Nama Karyawan -->
+                    <div class="form-group">
+                        <label for="karyawan_id">
+                            Nama Karyawan
+                        </label>
+
+                        <select
+                            name="karyawan_id"
+                            id="karyawan_id"
+                            class="form-control"
+                            required
+                        >
+                            <option value="">
+                                -- Pilih Karyawan --
+                            </option>
+
+                            @foreach ($karyawan as $k)
+                                <option value="{{ $k->id }}">
+                                    {{ $k->nama_lengkap }}
+                                </option>
+                            @endforeach
+
+                        </select>
+                    </div>
+
+                    <!-- Durasi -->
+                    <div class="form-group">
+                        <label for="durasi">
+                            Durasi (Jam)
+                        </label>
+
+                        <input
+                            type="number"
+                            name="durasi"
+                            id="durasi"
+                            class="form-control"
+                            min="1"
+                            step="0.5"
+                            placeholder="Contoh: 2"
+                            required
+                        >
+                    </div>
+
+                    <!-- Keterangan -->
+                    <div class="form-group">
+                        <label for="keterangan">
+                            Keterangan
+                        </label>
+
+                        <textarea
+                            name="keterangan"
+                            id="keterangan"
+                            class="form-control"
+                            rows="3"
+                            placeholder="Masukkan keterangan lembur"
+                            required
+                        ></textarea>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        data-dismiss="modal"
+                    >
+                        Close
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        Simpan
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
 
 @foreach ($data as $dp)
   <div class="modal fade" id="data-{{$dp->id}}" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="data-{{$dp->id}}Label" aria-hidden="true">
@@ -77,7 +200,7 @@
     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#staticBackdrop">
       Tambah
     </button>
-    {{-- <button class="btn btn-primary">Tambah</button> --}}
+ 
   </div>
 
     <div class="table-responsive">

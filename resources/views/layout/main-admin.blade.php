@@ -58,7 +58,7 @@
                     {{-- <i class="fas fa-laugh-wink"></i> --}}
 
                     <?php// print_r(asset('img/logo_bprs.jpg')); ?>
-                    <img src="{{asset('public/img/logo_bprs.jpg')}}" width="50px">
+                    <img src="" width="50px">
                 </div>
                 {{-- <div class="sidebar-brand-text mx-3">SB Admin <sup>2</sup></div> --}}
             </a>
@@ -295,7 +295,7 @@
             <footer class="sticky-footer bg-white">
                 <div class="container my-auto">
                     <div class="copyright my-auto">
-                        <span>&copy;2021 Absensi Kehadiran BPRS Fajar</span>
+                       
                         <span class="float-right">Redeveloped by MBC Consulting</span>
                     </div>
                 </div>

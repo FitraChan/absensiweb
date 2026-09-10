@@ -193,36 +193,7 @@ class PenggajianController extends Controller
               TransGaji::where('item_gaji_id', 13)->where('gaji_id', $cek->id)->update(['nominal' => $hasilSakit['potongan'], 'qty' => $hasilSakit['qty']]);
             }
 
-
-
-
-
-
-            // if (TransGaji::where('item_gaji_id', 6)->where('gaji_id', $cek->id)->first() != null || TransGaji::where('item_gaji_id', 6)->where('gaji_id', $cek->id)->first() != "") {
-
-            //   $absensi1 = count(Absensi::whereBetween('tanggal', [$periode->mulai, $periode->selesai])->where('karyawan_id', $cek->karyawan_id)->where('status_absensi', 'I')->get());
-            //   $izin = 1 / 30 * $gapok;
-            //   TransGaji::where('item_gaji_id', 6)->where('gaji_id', $cek->id)->update(['nominal' => $izin, 'qty' => $absensi1]);
-
-            //   $dataIjin = [
-            //     'gaji_id' => $cek->id,
-            //     'nominal' => $izin,
-            //     'qty' => $absensi1,
-            //   ];
-
-            //   $logs = [
-            //     'tanggal' => now(),
-            //     'tabel' => 'TransGaji',
-            //     'aksi' => 'Update',
-            //     'user' => auth()->guard('karyawan')->user()->hak_akses . '-' . auth()->guard('karyawan')->user()->id,
-            //     'ip' => $request->ip(),
-            //     'keterangan' => json_encode(['data' => $dataIjin]),
-            //     'serial' => url('fetchGaji'),
-            //   ];
-
-
-            //   $log->create($logs);
-            // } // end of if
+            // alpha            
             if (TransGaji::where('item_gaji_id', 7)->where('gaji_id', $cek->id)->first() != null || TransGaji::where('item_gaji_id', 7)->where('gaji_id', $cek->id)->first() != "") {
               $hasilAlpha = $this->hitungPotonganBerdasarkanQty(
                 jenisPotongan: 'alpha',
@@ -240,32 +211,7 @@ class PenggajianController extends Controller
 
               TransGaji::where('item_gaji_id', 7)->where('gaji_id', $cek->id)->update(['nominal' => $hasilAlpha['potongan'], 'qty' => $hasilAlpha['qty']]);
             }
-            // alpha
-            // if (TransGaji::where('item_gaji_id', 7)->where('gaji_id', $cek->id)->first() != null || TransGaji::where('item_gaji_id', 7)->where('gaji_id', $cek->id)->first() != "") {
-
-            //   $absensi2 = count(Absensi::whereBetween('tanggal', [$periode->mulai, $periode->selesai])->where('karyawan_id', $cek->karyawan_id)->where('status_absensi', 'A')->get());
-            //   $alfa = 1 / 25 * $gapok;
-            //   TransGaji::where('item_gaji_id', 7)->where('gaji_id', $cek->id)->update(['nominal' => $alfa, 'qty' => $absensi2]);
-
-            //   $dataAlpha = [
-            //     'gaji_id' => $cek->id,
-            //     'nominal' => $alfa,
-            //     'qty' => $absensi2,
-            //   ];
-
-            //   $logs2 = [
-            //     'tanggal' => now(),
-            //     'tabel' => 'TransGaji',
-            //     'aksi' => 'Update',
-            //     'user' => auth()->guard('karyawan')->user()->hak_akses . '-' . auth()->guard('karyawan')->user()->id,
-            //     'ip' => $request->ip(),
-            //     'keterangan' => json_encode(['data' => $dataAlpha]),
-            //     'serial' => url('fetchGaji'),
-            //   ];
-
-
-            //   $log->create($logs2);
-            // }
+           
 
             // uang makan
             if (TransGaji::where('item_gaji_id', 2)->where('gaji_id', $cek->id)->first() != null || TransGaji::where('item_gaji_id', 2)->where('gaji_id', $cek->id)->first() != "") {
@@ -313,34 +259,7 @@ class PenggajianController extends Controller
                 log: $log
               );
 
-              TransGaji::where('item_gaji_id', 5)->where('gaji_id', $cek->id)->update(['nominal' => $hasilLupaAbsen['potongan'], 'qty' => $hasilLupaAbsen['qty']]);
-
-              //   $absensi4 = count(Absensi::whereBetween('tanggal', [$periode->mulai, $periode->selesai])->where('karyawan_id', $cek->karyawan_id)->where('status_absensi', 'T')->get());
-
-              //   $konfig = DB::table('konfigs')->first();
-
-              //   $nominal =  $uang_makan; // ga dapat uang makan
-
-              //   TransGaji::where('item_gaji_id', 5)->where('gaji_id', $cek->id)->update(['nominal' => $nominal, 'qty' => $absensi4]);
-
-              //   $dataLupa = [
-              //     'gaji_id' => $cek->id,
-              //     'nominal' => $nominal,
-              //     'qty' => $absensi4,
-              //   ];
-
-              //   $logs4 = [
-              //     'tanggal' => now(),
-              //     'tabel' => 'TransGaji',
-              //     'aksi' => 'Update',
-              //     'user' => auth()->guard('karyawan')->user()->hak_akses . '-' . auth()->guard('karyawan')->user()->id,
-              //     'ip' => $request->ip(),
-              //     'keterangan' => json_encode(['data' => $dataLupa]),
-              //     'serial' =>  url('fetchGaji'),
-              //   ];
-
-
-              //   $log->create($logs4);
+              TransGaji::where('item_gaji_id', 5)->where('gaji_id', $cek->id)->update(['nominal' => $hasilLupaAbsen['potongan'], 'qty' => $hasilLupaAbsen['qty']]);            
             }
 
             //bpjs
@@ -371,8 +290,6 @@ class PenggajianController extends Controller
               $jumlahKejadian = 0;
 
               foreach ($absensiT as $itemAbsensi) {
-
-
 
                 /*
                 |--------------------------------------------------------------------------
@@ -407,188 +324,10 @@ class PenggajianController extends Controller
 
                 $totalPotongan += $hasilPulang['potongan'];
                 $jumlahKejadian += $hasilPulang['qty'];
-
-                // foreach ($absensiT as $key_emp) {
-
-                //   $ot_in = $key_emp->ot_in;
-
-                // // code...
-                // if($ot_in >= -15 &&  $ot_in <= -1 && $ot_in != null && $key_emp->status_absensi != 'T'){
-
-
-
-                //    $telat =round($uang_makan / 2); //30000
-                //    // cek nominal nya ada apa kagak??
-                //    $cekTrans =   TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->first();
-                //    if($cekTrans->nominal != 0 ||   $cekTrans->nominal != null){
-
-                //        $totalTelat = $cekTrans->nominal + $telat;                    
-                //        TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->update(['nominal'=> $totalTelat, 'qty'=>1]);
-
-
-                //    }else{
-
-
-                //        TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->update(['nominal'=> $telat, 'qty'=>1]);
-
-                //   }
-
-
-                // }elseif ($ot_in >= -30 &&  $ot_in <= -15 && $ot_in != null && $key_emp->status_absensi != 'T') {
-
-                //   // code...
-                //   $telat =round(0.75*$uang_makan);
-
-                //   $cekTrans =   TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->first();
-                //   if($cekTrans->nominal != 0 ||   $cekTrans->nominal != null) {
-
-                //     $totalTelat = $cekTrans->nominal + $telat;
-
-
-                //     TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->update(['nominal'=> $totalTelat, 'qty'=>1]);
-
-                //     }else{
-                //       TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->update(['nominal'=> $telat, 'qty'=>1]);
-
-
-                //     }
-                // }elseif ( $ot_in >= -59 && $ot_in <= -30 && $ot_in != null && $key_emp->status_absensi != 'T') {
-
-
-
-                //   $telat =round($uang_makan);
-
-                //   $cekTrans =   TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->first();
-                //   if($cekTrans->nominal != 0 ||   $cekTrans->nominal != null){
-
-                //     $totalTelat = $cekTrans->nominal + $telat;
-                //       TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->update(['nominal'=> $totalTelat, 'qty'=>1]);
-
-
-
-                //     }else{
-                //       TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->update(['nominal'=> $telat, 'qty'=>1]);
-
-
-                //     }
-                // }elseif($ot_in <= -59 &&  $ot_in != null && $key_emp->status_absensi != 'T'){
-
-
-
-                //         $telat =round($uang_makan);
-
-                //         $cekTrans =   TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->first();
-                //         if($cekTrans->nominal != 0 ||   $cekTrans->nominal != null){
-
-                //           $totalTelat = $cekTrans->nominal + $telat;
-
-
-                //             TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->update(['nominal'=> $totalTelat, 'qty'=>1]);
-
-                //           }else{
-
-
-                //             TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->update(['nominal'=> $telat, 'qty'=>1]);
-
-
-                //           }
-
-                // }
-
-                //    $ot_out = $key_emp->ot_out;
-
-                //    if($ot_out >= -15 &&  $ot_out <= -1 && $ot_out != null && $key_emp->status_absensi != 'T'){
-
-                //       $telat =   round($uang_makan / 2); //30000
-                //       // cek nominal nya ada apa kagak??
-                //       $cekTrans =   TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->first();
-                //       if($cekTrans->nominal != 0 ||   $cekTrans->nominal != null){
-
-                //         $totalTelat = $cekTrans->nominal + $telat;
-                //         TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->update(['nominal'=> $totalTelat, 'qty'=>1]);
-
-                //         // echo"<pre>";
-                //         // print_r("sudah ada tunggakan ".$totalTelat ."  ot_out >= -15 &&  ot_out <= -1 karyawan_id ".$cek->karyawan_id);
-                //         // echo"</pre>";
-                //         }else{
-                //           TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->update(['nominal'=> $telat, 'qty'=>1]);
-
-                //           // echo"<pre>";
-                //           // print_r($telat ."  ot_out >= -15 &&  ot_out <= -1 karyawan_id".$cek->karyawan_id." tanggal ".$key_emp->tanggal);
-                //           // echo"</pre>";
-                //         }
-
-
-                //    }elseif ($ot_out >= -30 &&  $ot_out <= -15 && $ot_out != null && $key_emp->status_absensi != 'T') {
-                //      // code...
-                //      $telat =round(0.75*$uang_makan); // 60000
-                //      // cek nominal nya ada apa kagak??
-                //      $cekTrans =   TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->first();
-                //      if($cekTrans->nominal != 0 ||   $cekTrans->nominal != null){
-
-                //        $totalTelat = $cekTrans->nominal + $telat;
-
-                //        TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->update(['nominal'=> $totalTelat, 'qty'=>1]);
-
-                //        // echo"<pre>";
-                //        // print_r("sudah ada tunggakan ".$totalTelat ."  ot_out >= -30 &&  ot_out <= -15 karyawan_id".$cek->karyawan_id);
-                //        // echo"</pre>";
-                //        }else{
-                //          TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->update(['nominal'=> $telat, 'qty'=>1]);
-
-                //          // echo"<pre>";
-                //          // print_r($telat ."  ot_out >= -30 &&  ot_out <= -15 karyawan_id ".$cek->karyawan_id." tanggal ".$key_emp->tanggal);
-                //          // echo"</pre>";
-                //        }
-                //    }elseif ($ot_out >= -59 && $ot_out <= -30 && $ot_out != null && $key_emp->status_absensi != 'T') {
-                //      // code...
-                //      $telat =round($uang_makan); //120000
-                //      // cek nominal nya ada apa kagak??
-                //      $cekTrans =   TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->first();
-                //      if($cekTrans->nominal != 0 ||   $cekTrans->nominal != null){
-
-                //        $totalTelat = $cekTrans->nominal + $telat;
-                //         TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->update(['nominal'=> $totalTelat, 'qty'=>1]);
-                //        //
-                //        // echo"<pre>";
-                //        // print_r("sudah ada tunggakan ".$totalTelat ." ot_out  <= -30 ".$cek->id." tanggal ".$key_emp->tanggal." karyawan_id ".$cek->karyawan_id);
-                //        // echo"</pre>";
-
-                //        }else{
-                //          TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->update(['nominal'=> $telat, 'qty'=>1]);
-
-                //          // echo"<pre>";
-                //          // print_r($telat ." ot_out  <= -30 ".$cek->id." tanggal ".$key_emp->tanggal." karyawan_id ".$cek->karyawan_id);
-                //          // echo"</pre>";
-                //        }
-                //    }elseif($ot_out <= -59 &&  $ot_out != null && $key_emp->status_absensi != 'T'){
-
-                //      $telat =round($uang_makan);
-
-                //      $cekTrans =   TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->first();
-                //      if($cekTrans->nominal != 0 ||   $cekTrans->nominal != null){
-
-                //        $totalTelat = $cekTrans->nominal + $telat;
-
-                //        // echo"<pre>";
-                //        // print_r(" sudah ada tunggakan sebelumnya". $totalTelat ." ot_out  <= -59 ".$cek->id." tanggal ".$key_emp->tanggal." karyawan_id ".$cek->karyawan_id);
-                //        // echo"</pre>";
-                //          TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->update(['nominal'=> $totalTelat, 'qty'=>1]);
-
-                //        }else{
-                //          TransGaji::where('item_gaji_id', 4)->where('gaji_id', $cek->id)->update(['nominal'=> $telat, 'qty'=>1]);
-
-                //           // echo"<pre>";
-                //           // print_r($total ." ot_out  <= -59 ".$cek->id." tanggal ".$key_emp->tanggal." karyawan_id ".$cek->karyawan_id);
-                //           // echo"</pre>";
-
-
-                //        }
-                //    }
-
+               
                 //lembur ==============================
 
-                $cekLembur = Lembur::where('karyawan_id', $key->id)->where('tgl_pengajuan', 'LIKE', $itemAbsensi->tanggal)->first();
+                $cekLembur = Lembur::where('karyawan_id', $key->id)->whereDate('tgl_pengajuan', $itemAbsensi->tanggal)->first();
                 $lembur;
                 if ($itemAbsensi->ot_out > 0 && optional($cekLembur)->sts_pengajuan == 1) {
                   $hasil_lembur = floor($itemAbsensi->ot_out / 60);
@@ -652,15 +391,6 @@ class PenggajianController extends Controller
     $keterangan,
     $log
   ): array {
-    // if ($qty <= 0) {
-    //     return [
-    //         'potongan'      => 0,
-    //         'qty'           => 0,
-    //         'nilai_dasar'   => 0,
-    //         'aturan_id'     => null,
-    //         'nama_aturan'   => null,
-    //     ];
-    // }
 
     $aturan = AturanPotongan::query()
       ->where('konfig_id', $konfigId)

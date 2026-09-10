@@ -295,8 +295,12 @@
     data-toggle="modal"
     data-target="#modal-status-absensi"
 >
-    Update Absensi
+    Tambah Izin
 </button>
+
+<br />
+
+<br />
 
     <div class="row mb-5">
       <div class="col-sm-5">
@@ -386,7 +390,7 @@
 				{data: 'karyawan_id', name: 'karyawan_id'},
 				{data: 'jenis_absen', name: 'jenis_absen'},
 				{data: 'status', name: 'status'},
-        {data: 'cuti.jatah_days', name: 'cuti.jatah_days'},
+                {data: 'cuti.jatah_days', name: 'cuti.jatah_days', defaultContent: '0'},
 				{data: 'action', name: 'action', orderable: false, searchable: false},
 		  ],
 		});

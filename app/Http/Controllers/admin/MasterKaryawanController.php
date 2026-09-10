@@ -64,7 +64,7 @@ class MasterKaryawanController extends Controller
 					})
 					->editColumn('departement_id',function ($row)
 					{
-						return $row->departement->nama_departement;
+						return $row->departement?->nama_departement;
 					})
 					->editColumn('jabatan_id',function ($row)
 					{

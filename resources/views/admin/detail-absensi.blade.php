@@ -17,8 +17,8 @@
         </button>
       </div>
       <div class="modal-body m-auto">
-        {{-- <img style="max-width: 100%" src="{{asset('storage/absen_masuk/'.$abs->url_masuk)}}" alt=""> --}}
-        <img style="max-width: 100%" src="{{$abs->url_masuk}}" alt="">
+        {{-- <img style="max-width: 100%" src="{{ 'https://absensiapi.mbcconsulting.id/storage/app/public/'.$abs->url_masuk}}" alt=""> --}}
+        <img style="max-width: 100%" src="{{ 'https://absensiapi.mbcconsulting.id/storage/app/public/'.$abs->url_masuk}}" alt="">
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -39,7 +39,7 @@
         </button>
       </div>
       <div class="modal-body m-auto">
-        <img style="max-width: 100%" src="{{asset('storage/absen_keluar/'.$abp->url_keluar)}}" alt="">
+        <img style="max-width: 100%" src="{{'https://absensiapi.mbcconsulting.id/storage/app/public/'.$abp->url_keluar}}" alt="">
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

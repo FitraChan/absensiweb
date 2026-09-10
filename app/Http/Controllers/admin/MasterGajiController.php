@@ -11,6 +11,7 @@ use App\Models\Log;
 use App\Models\Karyawan;
 use App\Models\TransAbsen;
 use App\Models\Absensi;
+use App\Models\Cuti;
 use App\Models\TransGaji;
 use App\Models\SetPayroll;
 
@@ -353,6 +354,17 @@ class MasterGajiController extends Controller
                 ];
 
                 Absensi::create($data);
+
+                $tahun = date('Y');
+
+                $jatah_cuti = DB::table('konfigs')->first();
+
+                Cuti::create([
+                        'karyawan_id' => $karyawan->id,
+                        'tahun' => $tahun,
+                        'total_hari' => 0,
+                        'jatah_days' => $jatah_cuti->jatah_cuti,
+                ]);
 
                 $logs5 = [
                     'tanggal' => now(),

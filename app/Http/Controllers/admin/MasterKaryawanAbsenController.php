@@ -19,11 +19,7 @@ use Auth;
 
 class MasterKaryawanAbsenController extends Controller
 {
-  /**
-   * Display a listing of the resource.
-   *
-   * @return \Illuminate\Http\Response
-   */
+
   public function index(Request $request, KaryawanAbsen $karyawanAbsen)
   {
     $data = $karyawanAbsen::with('cuti')->latest();
@@ -70,7 +66,7 @@ class MasterKaryawanAbsenController extends Controller
     return view('admin.dashboard-karyawan_absen', compact('data', 'karyawan'))->with(['cekNav' => 'kabsen']);
   }
 
-  public function updateRange(Request $request)
+public function updateRange(Request $request)
 {
     $request->validate([
         'karyawan_id' => [
@@ -120,6 +116,37 @@ class MasterKaryawanAbsenController extends Controller
             'updated_at'     => now(),
         ]);
 
+        $tanggalMulai = date('Y-m-d', strtotime($request->tanggal_mulai));
+        $tanggalSelesai = date('Y-m-d', strtotime($request->tanggal_selesai));
+
+        $tanggalArray = [];
+
+        $periode = new \DatePeriod(
+            new \DateTime($tanggalMulai),
+            new \DateInterval('P1D'),
+            (new \DateTime($tanggalSelesai))->modify('+1 day')
+        );
+
+        foreach ($periode as $tanggal) {
+            $tanggalArray[] = $tanggal->format('Y-m-d');
+        }
+
+        $tanggalJson = json_encode($tanggalArray);
+        $jumlahTanggal = count($tanggalArray);
+
+        //dd($tanggalJson);
+
+
+
+      $simpan = KaryawanAbsen::create([
+        'karyawan_id' => $request->karyawan_id,
+        'tanggal' => $tanggalJson,
+        'keperluan' => $request->keterangan,
+        'jenis_absen' => $request->status_absensi,
+        'durasi' => $jumlahTanggal,
+        'status' => 'DISETUJUI'
+      ]);
+
     if ($jumlahUpdate === 0) {
         return back()
             ->withInput()
@@ -153,7 +180,10 @@ class MasterKaryawanAbsenController extends Controller
    */
   public function store(Request $request)
   {
-    //
+    
+
+
+
   }
 
   /**
@@ -255,16 +285,9 @@ class MasterKaryawanAbsenController extends Controller
               'serial' => route('karywanAbsen.store'),
             ];
 
-            $log->create($logs2);
-
-            // echo "<pre>";
-            //   print_r($dates[$i]);
-            // echo "</pre>";
+            $log->create($logs2);          
 
           } //  end of for ($i=0; $i < $kary->durasi ; $i++) {
-
-
-
 
           Cuti::where('karyawan_id', $kary->karyawan_id)->where('tahun', $year)->update(['jatah_days' => $jatah, 'total_hari' => $total_hari]);
         } // end of if($jatah > 0){

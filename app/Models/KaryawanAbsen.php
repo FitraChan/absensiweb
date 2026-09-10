@@ -13,6 +13,7 @@ class KaryawanAbsen extends Model
 
     protected $fillable = [
        'karyawan_id',
+       'tanggal',
        'tanggal_mulai',
        'durasi',
        'status',
