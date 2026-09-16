@@ -60,7 +60,7 @@ class MasterAbensiController extends Controller
           }
         })
         ->editColumn('departement_id', function ($data) {
-          return $data->departement->nama_departement;
+          return $data->departement?->nama_departement;
         })
         ->editColumn('jabatan_id', function ($data) {
           return $data->jabatan?->nama_jabatan;
